@@ -33,15 +33,12 @@ export const updateUserProfiles = async (
   console.log('Access PATCH /users/:id');
 
   try {
-    const { profiles, activeProfile } = req.body;
+    const { profile } = req.body;
     const id = parseInt(req.params.id, 10);
 
     const db = await getDb();
     const collection = await db?.collection('users');
-    const user = await collection?.updateOne(
-      { id },
-      { profiles, activeProfile },
-    );
+    const user = await collection?.updateOne({ id }, { $push: { profile } });
 
     if (!user) {
       res.status(404).json({ message: 'User not found' });

@@ -8,6 +8,7 @@ app.use(express.json());
 
 // Routes
 app.get('/', (req, res) => {
+  console.log('Access GET /');
   res.send('Thing is working');
 });
 

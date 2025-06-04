@@ -9,6 +9,8 @@ export const createProfile = async (
   res: Response,
   next: NextFunction,
 ) => {
+  console.log('Access POST /profiles');
+
   try {
     const { name, uri, picture, userId } = req.body;
     const newProfile: Profile = { id: Date.now(), name, uri, picture, userId };
@@ -29,6 +31,8 @@ export const getProfiles = async (
   res: Response,
   next: NextFunction,
 ) => {
+  console.log('Access GET /profiles');
+
   try {
     const db = await getDb();
     const collection = await db?.collection('profiles');
@@ -46,6 +50,8 @@ export const getProfileById = async (
   res: Response,
   next: NextFunction,
 ) => {
+  console.log('Access GET /profiles/:id');
+
   try {
     const id = parseInt(req.params.id, 10);
     const db = await getDb();
@@ -69,6 +75,8 @@ export const updateProfile = (
   res: Response,
   next: NextFunction,
 ) => {
+  console.log('Access PUT /profiles/:id');
+
   try {
     const id = parseInt(req.params.id, 10);
     const { name } = req.body;
@@ -90,6 +98,8 @@ export const deleteProfile = (
   res: Response,
   next: NextFunction,
 ) => {
+  console.log('Access DELETE /profiles/:id');
+
   try {
     const id = parseInt(req.params.id, 10);
     const profileIndex = profiles.findIndex((i) => i.id === id);

@@ -18,7 +18,7 @@ export const createUser = async (
     const collection = await db?.collection('users');
     await collection?.insertOne(newUser);
 
-    res.send(newUser).status(201);
+    res.status(201).send(newUser);
   } catch (error) {
     next(error);
   }
@@ -48,7 +48,7 @@ export const updateUserProfiles = async (
       return;
     }
 
-    res.send().status(200);
+    res.status(200).send();
   } catch (error) {
     next(error);
   }
@@ -74,7 +74,7 @@ export const doLogin = async (
       return;
     }
 
-    res.json(user).status(200);
+    res.status(200).json(user);
   } catch (error) {
     next(error);
   }
@@ -99,7 +99,7 @@ export const getMe = async (
       return;
     }
 
-    res.json(user).status(200);
+    res.status(200).json(user);
   } catch (error) {
     next(error);
   }

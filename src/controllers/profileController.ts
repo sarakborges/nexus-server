@@ -18,7 +18,7 @@ export const createProfile = async (
     const collection = await db?.collection('profiles');
     await collection?.insertOne(newProfile);
 
-    res.send(newProfile).status(201);
+    res.status(201).send(newProfile);
   } catch (error) {
     next(error);
   }
@@ -37,7 +37,7 @@ export const getProfiles = async (
     const collection = await db?.collection('profiles');
     const profiles = await collection?.find().toArray();
 
-    res.json(profiles).status(200);
+    res.status(200).json(profiles);
   } catch (error) {
     next(error);
   }
@@ -62,7 +62,7 @@ export const getProfileById = async (
       return;
     }
 
-    res.json(profile).status(200);
+    res.status(200).json(profile);
   } catch (error) {
     next(error);
   }
@@ -87,7 +87,7 @@ export const updateProfileById = async (
       return;
     }
 
-    res.json(profile).status(200);
+    res.status(200).json(profile);
   } catch (error) {
     next(error);
   }
@@ -112,7 +112,7 @@ export const deleteProfileById = async (
       return;
     }
 
-    res.json(profile).status(200);
+    res.status(200).json(profile);
   } catch (error) {
     next(error);
   }

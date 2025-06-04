@@ -3,8 +3,8 @@ import {
   createProfile,
   getProfiles,
   getProfileById,
-  updateProfile,
-  deleteProfile,
+  updateProfileById,
+  deleteProfileById,
 } from '../controllers/profileController.ts';
 
 const router = Router();
@@ -12,7 +12,7 @@ const router = Router();
 router.get('/', getProfiles);
 router.get('/:id', getProfileById);
 router.post('/', createProfile);
-router.put('/:id', updateProfile);
-router.delete('/:id', deleteProfile);
+router.put('/:id', updateProfileById);
+router.delete('/:id', deleteProfileById);
 
 export default router;

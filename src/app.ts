@@ -1,5 +1,6 @@
 import express from 'express';
 import profileRoutes from './routes/profileRoutes.ts';
+import userRoutes from './routes/userRoutes.ts';
 import { errorHandler } from './middlewares/errorHandler.ts';
 
 const app = express();
@@ -7,12 +8,8 @@ const app = express();
 app.use(express.json());
 
 // Routes
-app.get('/', (req, res) => {
-  console.log('Access GET /');
-  res.send('Thing is working');
-});
-
 app.use('/profiles', profileRoutes);
+app.use('/users', userRoutes);
 
 // Global error handler (should be after routes)
 app.use(errorHandler);

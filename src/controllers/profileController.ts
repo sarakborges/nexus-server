@@ -1,5 +1,4 @@
 import type { Request, Response, NextFunction } from 'express';
-import { profiles } from '../models/profile.ts';
 import type { Profile } from '../models/profile.ts';
 import { getDb } from '../config/db.ts';
 
@@ -69,31 +68,33 @@ export const getProfileById = async (
   }
 };
 
-// Update an profile
-export const updateProfile = (
+// Update single profile
+export const updateProfileById = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Access PUT /profiles/:id');
+  console.log('Access PATCH /profiles/:id');
 
   try {
     const id = parseInt(req.params.id, 10);
-    const { name } = req.body;
-    const profileIndex = profiles.findIndex((i) => i.id === id);
-    if (profileIndex === -1) {
+    const db = await getDb();
+    const collection = await db?.collection('profiles');
+    const profile = await collection?.updateOne({ id }, { ...req.body });
+
+    if (!profile) {
       res.status(404).json({ message: 'Profile not found' });
       return;
     }
-    profiles[profileIndex].name = name;
-    res.json(profiles[profileIndex]);
+
+    res.json(profile).status(200);
   } catch (error) {
     next(error);
   }
 };
 
-// Delete an profile
-export const deleteProfile = (
+// Delete single profile
+export const deleteProfileById = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -102,13 +103,16 @@ export const deleteProfile = (
 
   try {
     const id = parseInt(req.params.id, 10);
-    const profileIndex = profiles.findIndex((i) => i.id === id);
-    if (profileIndex === -1) {
+    const db = await getDb();
+    const collection = await db?.collection('profiles');
+    const profile = await collection?.deleteOne({ id });
+
+    if (!profile) {
       res.status(404).json({ message: 'Profile not found' });
       return;
     }
-    const deletedProfile = profiles.splice(profileIndex, 1)[0];
-    res.json(deletedProfile);
+
+    res.json(profile).status(200);
   } catch (error) {
     next(error);
   }

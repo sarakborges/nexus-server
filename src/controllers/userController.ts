@@ -24,8 +24,8 @@ export const createUser = async (
   }
 };
 
-// Update an user profiles
-export const updateUserProfiles = async (
+// Add a new profile to an user
+export const createUserProfiles = async (
   req: Request,
   res: Response,
   next: NextFunction,

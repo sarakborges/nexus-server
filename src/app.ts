@@ -11,11 +11,7 @@ app.use(express.json());
 // Routes
 app.use('/profiles', profileRoutes);
 app.use('/users', userRoutes);
-app.use(
-  cors({
-    origin: ['http://localhost', 'https://nexus-theta-three.vercel.app/'],
-  }),
-);
+app.use(cors());
 
 // Global error handler (should be after routes)
 app.use(errorHandler);

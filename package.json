@@ -1,7 +1,7 @@
 {
   "type": "module",
   "scripts": {
-    "build": "echo '🏗️ Building with tsup...' && tsup src/server.ts --format esm --dts",
+    "build": "echo '🏗️ Building with tsup...' && tsup src/server.ts --format esm --outDir dist --clean",
     "start": "node dist/server.js",
     "dev": "nodemon --watch 'src/**/*' --exec ts-node-esm src/server.ts",
     "lint": "eslint 'src/**/*'"

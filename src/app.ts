@@ -7,12 +7,11 @@ import { errorHandler } from './middlewares/errorHandler.ts';
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
 // Routes
 app.use('/profiles', profileRoutes);
 app.use('/users', userRoutes);
-app.use(cors());
-app.options('*', cors());
 
 // Global error handler (should be after routes)
 app.use(errorHandler);

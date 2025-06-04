@@ -25,7 +25,7 @@ export const createUser = async (
 };
 
 // Add a new profile to an user
-export const createUserProfiles = async (
+export const addProfileToUser = async (
   req: Request,
   res: Response,
   next: NextFunction,

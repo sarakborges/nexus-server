@@ -3,14 +3,14 @@ import {
   createUser,
   doLogin,
   getMe,
-  createUserProfiles,
+  addProfileToUser,
 } from '../controllers/userController.ts';
 
 const router = Router();
 
 router.post('/login', doLogin);
 router.get('/:id', getMe);
-router.patch('/:id/create', createUserProfiles);
+router.patch('/:id/add', addProfileToUser);
 router.post('/', createUser);
 
 export default router;

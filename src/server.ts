@@ -3,6 +3,8 @@ import app from './app.ts'; // Your express app with routes defined
 
 const PORT = config.port;
 
+console.log('Yo, server is starting');
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

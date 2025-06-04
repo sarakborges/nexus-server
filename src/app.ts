@@ -7,6 +7,10 @@ const app = express();
 app.use(express.json());
 
 // Routes
+app.get('/', (req, res) => {
+  res.send('Thing is working');
+});
+
 app.use('/profiles', profileRoutes);
 
 // Global error handler (should be after routes)

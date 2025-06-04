@@ -38,7 +38,10 @@ export const addProfileToUser = async (
 
     const db = await getDb();
     const collection = await db?.collection('users');
-    const user = await collection?.updateOne({ id }, { $push: { profile } });
+    const user = await collection?.updateOne(
+      { id },
+      { $push: { profiles: profile } },
+    );
 
     if (!user) {
       res.status(404).json({ message: 'User not found' });

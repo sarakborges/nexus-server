@@ -27,22 +27,28 @@ export const getSuggestionsByProfile = async (
       ?.find({ id: { $nin: [...groupsIn] } })
       .toArray();
 
-    if (!profiles?.length || !groups?.length) {
+    if (!profiles?.length && !groups?.length) {
       res.status(404).json({ message: 'No suggestions found' });
       return;
     }
 
-    res.status(200).json([
-      {
+    const suggestions = [];
+
+    if (!!profiles?.length) {
+      suggestions.push({
         type: 'profile',
         suggestions: profiles,
-      },
+      });
+    }
 
-      {
+    if (!!groups?.length) {
+      suggestions.push({
         type: 'group',
         suggestions: groups,
-      },
-    ]);
+      });
+    }
+
+    res.status(200).json(suggestions);
   } catch (error) {
     next(error);
   }

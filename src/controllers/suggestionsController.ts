@@ -32,10 +32,17 @@ export const getSuggestionsByProfile = async (
       return;
     }
 
-    res.status(200).json({
-      profiles,
-      groups,
-    });
+    res.status(200).json([
+      {
+        type: 'profile',
+        suggestions: profiles,
+      },
+
+      {
+        type: 'group',
+        suggestions: groups,
+      },
+    ]);
   } catch (error) {
     next(error);
   }

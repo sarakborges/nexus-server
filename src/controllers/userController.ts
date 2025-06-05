@@ -33,12 +33,12 @@ export const getProfilesByUser = async (
   console.log('Access GET /user/:id/profiles');
 
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id);
     const db = await getDb();
     const collection = await db?.collection('profiles');
     const profiles = await collection?.find({ userId: id }).toArray();
 
-    if (!profiles) {
+    if (!profiles?.length) {
       res.status(404).json({ message: 'User not found' });
       return;
     }
@@ -59,7 +59,7 @@ export const changeUserActiveProfile = async (
 
   try {
     const { profile } = req.body;
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id);
 
     const db = await getDb();
     const collection = await db?.collection('users');
@@ -89,7 +89,7 @@ export const addProfileToUser = async (
 
   try {
     const { profile } = req.body;
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id);
 
     const db = await getDb();
     const collection = await db?.collection('users');
@@ -119,7 +119,7 @@ export const removeProfileFromUser = async (
 
   try {
     const { profile } = req.body;
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id);
 
     const db = await getDb();
     const collection = await db?.collection('users');
@@ -174,7 +174,7 @@ export const getMe = async (
   console.log('Access GET /users/:id');
 
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id);
     const db = await getDb();
     const collection = await db?.collection('users');
     const user = await collection?.findOne({ id });

@@ -52,7 +52,7 @@ export const getProfileById = async (
   console.log('Access GET /profiles/:id');
 
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id);
     const db = await getDb();
     const collection = await db?.collection('profiles');
     const profile = await collection?.findOne({ id });
@@ -77,7 +77,7 @@ export const updateProfileById = async (
   console.log('Access PATCH /profiles/:id');
 
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id);
     const db = await getDb();
     const collection = await db?.collection('profiles');
     const profile = await collection?.updateOne({ id }, { ...req.body });
@@ -102,7 +102,7 @@ export const deleteProfileById = async (
   console.log('Access DELETE /profiles/:id');
 
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id);
     const db = await getDb();
     const collection = await db?.collection('profiles');
     const profile = await collection?.deleteOne({ id });

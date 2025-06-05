@@ -107,7 +107,7 @@ export const deleteProfileById = async (
     const collection = await db?.collection('profiles');
     const profile = await collection?.deleteOne({ id });
 
-    if (!profile.acknowledged) {
+    if (!profile.deletedCount) {
       res.status(404).json({ message: 'Profile not found' });
       return;
     }

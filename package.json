@@ -3,7 +3,7 @@
   "scripts": {
     "build": "echo '🏗️ Building with tsup...' && tsup src/server.ts --format esm --out-dir dist",
     "start": "node dist/server.js",
-    "dev": "nodemon --watch 'src/**/*' --exec ts-node-esm src/server.ts",
+    "dev": "nodemon --watch 'src/' --exec ts-node-esm src/server.ts",
     "lint": "eslint 'src/**/*'"
   },
   "dependencies": {

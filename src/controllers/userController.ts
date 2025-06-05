@@ -36,7 +36,7 @@ export const getProfilesByUser = async (
     const id = parseInt(req.params.id, 10);
     const db = await getDb();
     const collection = await db?.collection('profiles');
-    const profiles = await collection?.find({ userId: id });
+    const profiles = await collection?.find({ userId: id }).toArray();
 
     if (!profiles) {
       res.status(404).json({ message: 'User not found' });

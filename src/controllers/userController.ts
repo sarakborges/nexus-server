@@ -25,7 +25,7 @@ export const createUser = async (
 };
 
 // Read all profiles from user
-export const getProfileById = async (
+export const getProfilesByUser = async (
   req: Request,
   res: Response,
   next: NextFunction,

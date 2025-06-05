@@ -20,18 +20,17 @@ export const getSuggestionsByProfile = async (
     const groupsIn = profile?.groups || [];
 
     const profiles = await profilesCollection
-      ?.find({
-        id: { $nin: [id, ...connections] },
-        $expr: { $lt: [0.5, { $rand: {} }] },
-      })
-      .limit(3)
+      ?.aggregate([
+        { $match: { id: { $nin: [id, ...connections] } } },
+        { $sample: { size: 3 } },
+      ])
       .toArray();
 
     const groups = await groupsCollection
-      ?.find({
-        id: { $nin: [...groupsIn], $expr: { $lt: [0.5, { $rand: {} }] } },
-      })
-      .limit(3)
+      ?.aggregate([
+        { $match: { id: { $nin: [...groupsIn] } } },
+        { $sample: { size: 3 } },
+      ])
       .toArray();
 
     if (!profiles?.length && !groups?.length) {

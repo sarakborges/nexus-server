@@ -177,14 +177,25 @@ export const getMe = async (
     const id = parseInt(req.params.id);
     const db = await getDb();
     const collection = await db?.collection('users');
-    const user = await collection?.findOne({ id });
-
+    const user = await collection
+      ?.aggregate([
+        { $match: { id } },
+        {
+          $lookup: {
+            from: 'profiles',
+            localField: 'profiles',
+            foreignField: 'id',
+            as: 'profiles',
+          },
+        },
+      ])
+      .toArray();
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
     }
 
-    res.status(200).json(user);
+    res.status(200).json(user[0]);
   } catch (error) {
     next(error);
   }

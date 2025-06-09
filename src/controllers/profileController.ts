@@ -1,5 +1,4 @@
 import type { Request, Response, NextFunction } from 'express';
-import type { Profile } from '../models/profile.ts';
 import { getDb } from '../config/db.ts';
 
 // Create an profile
@@ -11,14 +10,13 @@ export const createProfile = async (
   console.log('Access POST /profiles');
 
   try {
-    const { name, uri, picture, userId } = req.body;
-    const newProfile: Profile = { id: Date.now(), name, uri, picture, userId };
+    const profile = { ...req.body, id: Date.now() };
 
     const db = await getDb();
     const collection = await db?.collection('profiles');
-    await collection?.insertOne(newProfile);
+    await collection?.insertOne(profile);
 
-    res.status(201).send(newProfile);
+    res.status(201).send(profile);
   } catch (error) {
     next(error);
   }

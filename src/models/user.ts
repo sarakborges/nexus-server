@@ -1,9 +1,9 @@
-import { Profile } from './profile';
+import { ObjectId } from 'mongodb';
 
 export type User = {
-  id: number;
+  id: ObjectId;
   email: string;
   password: string;
-  profiles?: Array<Profile>;
-  activeProfile?: number;
+  profiles?: Array<ObjectId>;
+  activeProfile?: ObjectId;
 };

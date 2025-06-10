@@ -1,6 +1,8 @@
+import { ObjectId } from 'mongodb';
+
 export type Profile = {
-  id: number;
-  userId: number;
+  id: ObjectId;
+  userId: ObjectId;
   name: string;
   picture: string;
   uri: string;

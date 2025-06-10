@@ -15,7 +15,7 @@ export const createUser = async (
     const newUser: User = { ...req.body };
 
     const db = await getDb();
-    const collection = await db?.collection('users');
+    const collection = await db?.collection<User>('users');
     await collection?.insertOne(newUser);
 
     res.status(201).send(newUser);
@@ -33,11 +33,11 @@ export const changeUserActiveProfile = async (
   console.log('Access PATCH /users/:id/activeProfile');
 
   try {
-    const { profile } = req.body;
+    const profile = new ObjectId(req.body.profile as string);
     const id = new ObjectId(req.params.id);
 
     const db = await getDb();
-    const collection = await db?.collection('users');
+    const collection = await db?.collection<User>('users');
     const user = await collection?.findOneAndUpdate(
       { _id: id },
       { $set: { activeProfile: profile } },
@@ -63,11 +63,11 @@ export const addProfileToUser = async (
   console.log('Access PATCH /users/:id/add');
 
   try {
-    const { profile } = req.body;
+    const profile = new ObjectId(req.body.profile as string);
     const id = new ObjectId(req.params.id);
 
     const db = await getDb();
-    const collection = await db?.collection('users');
+    const collection = await db?.collection<User>('users');
     const user = await collection?.findOneAndUpdate(
       { _id: id },
       { $push: { profiles: profile } },
@@ -93,11 +93,11 @@ export const removeProfileFromUser = async (
   console.log('Access PATCH /users/:id/remove');
 
   try {
-    const { profile } = req.body;
+    const profile = new ObjectId(req.body.profile as string);
     const id = new ObjectId(req.params.id);
 
     const db = await getDb();
-    const collection = await db?.collection('users');
+    const collection = await db?.collection<User>('users');
     const user = await collection?.findOneAndUpdate(
       { _id: id },
       { $pull: { profiles: profile } },
@@ -124,7 +124,7 @@ export const doLogin = async (
 
   try {
     const db = await getDb();
-    const collection = await db?.collection('users');
+    const collection = await db?.collection<User>('users');
     const user = await collection?.findOne({ ...req.body });
 
     if (!user) {
@@ -149,7 +149,7 @@ export const getMe = async (
   try {
     const id = new ObjectId(req.params.id);
     const db = await getDb();
-    const collection = await db?.collection('users');
+    const collection = await db?.collection<User>('users');
     const user = await collection
       ?.aggregate([
         { $match: { _id: id } },

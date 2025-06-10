@@ -24,31 +24,6 @@ export const createUser = async (
   }
 };
 
-// Read all profiles from user
-export const getProfilesByUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  console.log('Access GET /user/:id/profiles');
-
-  try {
-    const id = new ObjectId(req.params.id);
-    const db = await getDb();
-    const collection = await db?.collection('profiles');
-    const profiles = await collection?.find({ userId: id }).toArray();
-
-    if (!profiles?.length) {
-      res.status(404).json({ message: 'User not found' });
-      return;
-    }
-
-    res.status(200).json(profiles);
-  } catch (error) {
-    next(error);
-  }
-};
-
 // Change which profile is active on user
 export const changeUserActiveProfile = async (
   req: Request,
@@ -63,7 +38,7 @@ export const changeUserActiveProfile = async (
 
     const db = await getDb();
     const collection = await db?.collection('users');
-    const user = await collection?.updateOne(
+    const user = await collection?.findOneAndUpdate(
       { _id: id },
       { $set: { activeProfile: profile } },
     );
@@ -73,7 +48,7 @@ export const changeUserActiveProfile = async (
       return;
     }
 
-    res.status(200).send();
+    res.status(200).send(user);
   } catch (error) {
     next(error);
   }
@@ -93,7 +68,7 @@ export const addProfileToUser = async (
 
     const db = await getDb();
     const collection = await db?.collection('users');
-    const user = await collection?.updateOne(
+    const user = await collection?.findOneAndUpdate(
       { _id: id },
       { $push: { profiles: profile } },
     );
@@ -103,7 +78,7 @@ export const addProfileToUser = async (
       return;
     }
 
-    res.status(200).send();
+    res.status(200).send(user);
   } catch (error) {
     next(error);
   }
@@ -123,7 +98,7 @@ export const removeProfileFromUser = async (
 
     const db = await getDb();
     const collection = await db?.collection('users');
-    const user = await collection?.updateOne(
+    const user = await collection?.findOneAndUpdate(
       { _id: id },
       { $pull: { profiles: profile } },
     );
@@ -133,7 +108,7 @@ export const removeProfileFromUser = async (
       return;
     }
 
-    res.status(200).send();
+    res.status(200).send(user);
   } catch (error) {
     next(error);
   }

@@ -79,7 +79,10 @@ export const updateProfileById = async (
     const id = new ObjectId(req.params.id);
     const db = await getDb();
     const collection = await db?.collection('profiles');
-    const profile = await collection?.updateOne({ _id: id }, { ...req.body });
+    const profile = await collection?.findOneAndUpdate(
+      { _id: id },
+      { ...req.body },
+    );
 
     if (!profile) {
       res.status(404).json({ message: 'Profile not found' });

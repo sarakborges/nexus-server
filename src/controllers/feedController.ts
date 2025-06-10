@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { getDb } from '../config/db.ts';
+import { ObjectId } from 'mongodb';
 
 // Read all feed from profile
 export const getFeedByProfile = async (
@@ -10,11 +11,11 @@ export const getFeedByProfile = async (
   console.log('Access GET /feed/:id');
 
   try {
-    const id = parseInt(req.params.id);
+    const id = new ObjectId(req.params.id);
     const db = await getDb();
     const profilesCollection = await db?.collection('profiles');
     const feedCollection = await db?.collection('feed');
-    const profile = await profilesCollection?.findOne({ id });
+    const profile = await profilesCollection?.findOne({ _id: id });
 
     const connections = profile?.connections || [];
 
@@ -25,7 +26,7 @@ export const getFeedByProfile = async (
           $lookup: {
             from: 'profiles',
             localField: 'profileId',
-            foreignField: 'id',
+            foreignField: '_id',
             as: 'profile',
           },
         },

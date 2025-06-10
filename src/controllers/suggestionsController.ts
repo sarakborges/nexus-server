@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { getDb } from '../config/db.ts';
+import { ObjectId } from 'mongodb';
 
 // Read all profiles from user
 export const getSuggestionsByProfile = async (
@@ -10,25 +11,25 @@ export const getSuggestionsByProfile = async (
   console.log('Access GET /suggestions/:id');
 
   try {
-    const id = parseInt(req.params.id);
+    const id = new ObjectId(req.params.id);
     const db = await getDb();
     const profilesCollection = await db?.collection('profiles');
     const groupsCollection = await db?.collection('groups');
-    const profile = await profilesCollection?.findOne({ id });
+    const profile = await profilesCollection?.findOne({ _id: id });
 
     const connections = profile?.connections || [];
     const groupsIn = profile?.groups || [];
 
     const profiles = await profilesCollection
       ?.aggregate([
-        { $match: { id: { $nin: [id, ...connections] } } },
+        { $match: { _id: { $nin: [id, ...connections] } } },
         { $sample: { size: 3 } },
       ])
       .toArray();
 
     const groups = await groupsCollection
       ?.aggregate([
-        { $match: { id: { $nin: [...groupsIn] } } },
+        { $match: { _id: { $nin: [...groupsIn] } } },
         { $sample: { size: 3 } },
       ])
       .toArray();

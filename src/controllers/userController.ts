@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { User } from '../models/user.ts';
 import { getDb } from '../config/db.ts';
+import { ObjectId } from 'mongodb';
 
 // Create an user
 export const createUser = async (
@@ -11,8 +12,7 @@ export const createUser = async (
   console.log('Access POST /users');
 
   try {
-    const { email, password } = req.body;
-    const newUser: User = { id: Date.now(), email, password };
+    const newUser: User = { ...req.body };
 
     const db = await getDb();
     const collection = await db?.collection('users');
@@ -33,7 +33,7 @@ export const getProfilesByUser = async (
   console.log('Access GET /user/:id/profiles');
 
   try {
-    const id = parseInt(req.params.id);
+    const id = new ObjectId(req.params.id);
     const db = await getDb();
     const collection = await db?.collection('profiles');
     const profiles = await collection?.find({ userId: id }).toArray();
@@ -59,12 +59,12 @@ export const changeUserActiveProfile = async (
 
   try {
     const { profile } = req.body;
-    const id = parseInt(req.params.id);
+    const id = new ObjectId(req.params.id);
 
     const db = await getDb();
     const collection = await db?.collection('users');
     const user = await collection?.updateOne(
-      { id },
+      { _id: id },
       { $set: { activeProfile: profile } },
     );
 
@@ -89,12 +89,12 @@ export const addProfileToUser = async (
 
   try {
     const { profile } = req.body;
-    const id = parseInt(req.params.id);
+    const id = new ObjectId(req.params.id);
 
     const db = await getDb();
     const collection = await db?.collection('users');
     const user = await collection?.updateOne(
-      { id },
+      { _id: id },
       { $push: { profiles: profile } },
     );
 
@@ -119,12 +119,12 @@ export const removeProfileFromUser = async (
 
   try {
     const { profile } = req.body;
-    const id = parseInt(req.params.id);
+    const id = new ObjectId(req.params.id);
 
     const db = await getDb();
     const collection = await db?.collection('users');
     const user = await collection?.updateOne(
-      { id },
+      { _id: id },
       { $pull: { profiles: profile } },
     );
 
@@ -148,11 +148,9 @@ export const doLogin = async (
   console.log('Access POST /users/login');
 
   try {
-    const { email, password } = req.body;
-
     const db = await getDb();
     const collection = await db?.collection('users');
-    const user = await collection?.findOne({ email, password });
+    const user = await collection?.findOne({ ...req.body });
 
     if (!user) {
       res.status(404).json({ message: 'User not found' });
@@ -174,17 +172,17 @@ export const getMe = async (
   console.log('Access GET /users/:id');
 
   try {
-    const id = parseInt(req.params.id);
+    const id = new ObjectId(req.params.id);
     const db = await getDb();
     const collection = await db?.collection('users');
     const user = await collection
       ?.aggregate([
-        { $match: { id } },
+        { $match: { _id: id } },
         {
           $lookup: {
             from: 'profiles',
             localField: 'profiles',
-            foreignField: 'id',
+            foreignField: '_id',
             as: 'profiles',
           },
         },

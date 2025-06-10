@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { getDb } from '../config/db.ts';
+import { ObjectId } from 'mongodb';
 
 // Create an profile
 export const createProfile = async (
@@ -10,7 +11,7 @@ export const createProfile = async (
   console.log('Access POST /profiles');
 
   try {
-    const profile = { ...req.body, id: Date.now() };
+    const profile = { ...req.body };
 
     const db = await getDb();
     const collection = await db?.collection('profiles');
@@ -50,10 +51,10 @@ export const getProfileById = async (
   console.log('Access GET /profiles/:id');
 
   try {
-    const id = parseInt(req.params.id);
+    const id = new ObjectId(req.params.id);
     const db = await getDb();
     const collection = await db?.collection('profiles');
-    const profile = await collection?.findOne({ id });
+    const profile = await collection?.findOne({ _id: id });
 
     if (!profile) {
       res.status(404).json({ message: 'Profile not found' });
@@ -75,10 +76,10 @@ export const updateProfileById = async (
   console.log('Access PATCH /profiles/:id');
 
   try {
-    const id = parseInt(req.params.id);
+    const id = new ObjectId(req.params.id);
     const db = await getDb();
     const collection = await db?.collection('profiles');
-    const profile = await collection?.updateOne({ id }, { ...req.body });
+    const profile = await collection?.updateOne({ _id: id }, { ...req.body });
 
     if (!profile) {
       res.status(404).json({ message: 'Profile not found' });
@@ -100,10 +101,10 @@ export const deleteProfileById = async (
   console.log('Access DELETE /profiles/:id');
 
   try {
-    const id = parseInt(req.params.id);
+    const id = new ObjectId(req.params.id);
     const db = await getDb();
     const collection = await db?.collection('profiles');
-    const profile = await collection?.deleteOne({ id });
+    const profile = await collection?.deleteOne({ _id: id });
 
     if (!profile.deletedCount) {
       res.status(404).json({ message: 'Profile not found' });

@@ -41,19 +41,15 @@ export const getSuggestionsByProfile = async (
 
     const suggestions = [];
 
-    if (!!profiles?.length) {
-      suggestions.push({
-        type: 'profile',
-        suggestions: profiles,
-      });
-    }
+    suggestions.push({
+      type: 'profile',
+      suggestions: profiles,
+    });
 
-    if (!!groups?.length) {
-      suggestions.push({
-        type: 'group',
-        suggestions: groups,
-      });
-    }
+    suggestions.push({
+      type: 'group',
+      suggestions: groups,
+    });
 
     res.status(200).json(suggestions);
   } catch (error) {

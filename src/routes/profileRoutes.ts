@@ -5,12 +5,14 @@ import {
   getProfileById,
   updateProfileById,
   deleteProfileById,
+  getProfileByUri,
 } from '../controllers/profileController.ts';
 
 const router = Router();
 
 router.get('/', getProfiles);
-router.get('/:id', getProfileById);
+router.get('/id/:id', getProfileById);
+router.get('/uri/:uri', getProfileByUri);
 router.post('/', createProfile);
 router.put('/:id', updateProfileById);
 router.delete('/:id', deleteProfileById);

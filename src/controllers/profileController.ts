@@ -48,13 +48,38 @@ export const getProfileById = async (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Access GET /profiles/:id');
+  console.log('Access GET /profiles/id/:id');
 
   try {
     const id = new ObjectId(req.params.id);
     const db = await getDb();
     const collection = await db?.collection('profiles');
     const profile = await collection?.findOne({ _id: id });
+
+    if (!profile) {
+      res.status(404).json({ message: 'Profile not found' });
+      return;
+    }
+
+    res.status(200).json(profile);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Read single profile
+export const getProfileByUri = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  console.log('Access GET /profiles/uri/:uri');
+
+  try {
+    const uri = req.params.uri;
+    const db = await getDb();
+    const collection = await db?.collection('profiles');
+    const profile = await collection?.findOne({ uri });
 
     if (!profile) {
       res.status(404).json({ message: 'Profile not found' });

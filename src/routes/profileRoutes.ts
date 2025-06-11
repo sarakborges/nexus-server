@@ -14,7 +14,7 @@ router.get('/', getProfiles);
 router.get('/id/:id', getProfileById);
 router.get('/uri/:uri', getProfileByUri);
 router.post('/', createProfile);
-router.put('/:id', updateProfileById);
+router.patch('/:id', updateProfileById);
 router.delete('/:id', deleteProfileById);
 
 export default router;

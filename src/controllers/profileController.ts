@@ -106,7 +106,8 @@ export const updateProfileById = async (
     const collection = await db?.collection('profiles');
     const profile = await collection?.findOneAndUpdate(
       { _id: id },
-      { ...req.body },
+      { $set: { ...req.body } },
+      { returnDocument: 'after' },
     );
 
     if (!profile) {

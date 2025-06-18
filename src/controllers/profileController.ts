@@ -76,13 +76,16 @@ export const getProfileByUri = async (
   console.log('Access GET /profiles/uri/:uri');
 
   try {
-    const uri = req.params.uri;
+    const { uri } = req.params;
+    const targetId = new ObjectId(req.query.targetId as string);
     const db = await getDb();
     const collection = await db?.collection('profiles');
 
     function matchProfileByUri(uri: string) {
       return { $match: { uri } };
     }
+
+    // === CONNECTED PROFILES ===
 
     function matchConnectedStatus() {
       return {
@@ -134,7 +137,17 @@ export const getProfileByUri = async (
       };
     }
 
-    function lookupConnectedProfiles() {
+    function addIsTargetConnectionInsideConnections(targetId: ObjectId) {
+      return {
+        $addFields: {
+          isTargetConnection: {
+            $eq: ['$otherProfile._id', targetId],
+          },
+        },
+      };
+    }
+
+    function lookupConnectedProfiles(targetId: ObjectId) {
       return {
         $lookup: {
           from: 'connections',
@@ -145,11 +158,36 @@ export const getProfileByUri = async (
             lookupOtherProfile(),
             unwindOtherProfile(),
             addOtherProfileField(),
+            addIsTargetConnectionInsideConnections(targetId),
+            { $sample: { size: 3 } },
           ],
           as: 'connections',
         },
       };
     }
+
+    function addIsConnectedWithTargetFromConnections() {
+      return {
+        $addFields: {
+          isConnectedWithTarget: {
+            $gt: [
+              {
+                $size: {
+                  $filter: {
+                    input: '$connections',
+                    as: 'conn',
+                    cond: { $eq: ['$$conn.isTargetConnection', true] },
+                  },
+                },
+              },
+              0,
+            ],
+          },
+        },
+      };
+    }
+
+    // === GROUPS ===
 
     function normalizeMembersArray() {
       return {
@@ -199,7 +237,11 @@ export const getProfileByUri = async (
         $lookup: {
           from: 'groups',
           let: { profileId: '$_id' },
-          pipeline: [normalizeMembersArray(), matchProfileInMembers()],
+          pipeline: [
+            normalizeMembersArray(),
+            matchProfileInMembers(),
+            { $sample: { size: 3 } },
+          ],
           as: 'groups',
         },
       };
@@ -207,7 +249,8 @@ export const getProfileByUri = async (
 
     const pipeline = [
       matchProfileByUri(uri),
-      lookupConnectedProfiles(),
+      lookupConnectedProfiles(targetId),
+      addIsConnectedWithTargetFromConnections(),
       lookupGroupsByMembership(),
     ];
 

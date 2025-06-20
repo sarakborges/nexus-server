@@ -117,3 +117,28 @@ export const getFeedByProfile = async (
     next(error);
   }
 };
+
+// Delete single feed item
+export const deleteFeedItemById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  console.log('Access DELETE /feed/:id');
+
+  try {
+    const id = new ObjectId(req.params.id);
+    const db = await getDb();
+    const collection = await db?.collection('feed');
+    const profile = await collection?.deleteOne({ _id: id });
+
+    if (!profile.deletedCount) {
+      res.status(404).json({ message: 'Feed item not found' });
+      return;
+    }
+
+    res.status(200).json(profile);
+  } catch (error) {
+    next(error);
+  }
+};

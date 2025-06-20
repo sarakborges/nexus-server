@@ -81,11 +81,12 @@ export const getProfileByUri = async (
     const db = await getDb();
     const collection = await db?.collection('profiles');
 
+    // === MATCH DO PERFIL ===
     function matchProfileByUri(uri: string) {
       return { $match: { uri } };
     }
 
-    // === CONNECTED PROFILES ===
+    // === CONEXÕES ===
 
     function matchConnectedStatus() {
       return {
@@ -93,6 +94,19 @@ export const getProfileByUri = async (
           $expr: {
             $and: [
               { $eq: ['$status', 'connected'] },
+              { $in: ['$$profileId', '$between'] },
+            ],
+          },
+        },
+      };
+    }
+
+    function matchRelevantStatuses() {
+      return {
+        $match: {
+          $expr: {
+            $and: [
+              { $in: ['$status', ['connected', 'requested']] },
               { $in: ['$$profileId', '$between'] },
             ],
           },
@@ -166,28 +180,81 @@ export const getProfileByUri = async (
       };
     }
 
-    function addIsConnectedWithTargetFromConnections() {
+    function lookupRequestedOrConnected(targetId: ObjectId) {
       return {
-        $addFields: {
-          isConnectedWithTarget: {
-            $gt: [
-              {
-                $size: {
-                  $filter: {
-                    input: '$connections',
-                    as: 'conn',
-                    cond: { $eq: ['$$conn.isTargetConnection', true] },
-                  },
+        $lookup: {
+          from: 'connections',
+          let: { profileId: '$_id' },
+          pipeline: [
+            matchRelevantStatuses(),
+            addOtherProfileId(),
+            lookupOtherProfile(),
+            unwindOtherProfile(),
+            addOtherProfileField(),
+            {
+              $addFields: {
+                isTargetRelated: {
+                  $eq: ['$otherProfile._id', targetId],
                 },
               },
-              0,
+            },
+            { $match: { isTargetRelated: true } },
+            { $limit: 1 },
+          ],
+          as: 'relatedConnection',
+        },
+      };
+    }
+
+    function addRequestedByToProfile() {
+      return {
+        $addFields: {
+          requestedBy: {
+            $ifNull: [
+              {
+                $let: {
+                  vars: {
+                    conn: { $arrayElemAt: ['$relatedConnection', 0] },
+                  },
+                  in: '$$conn.requestedBy',
+                },
+              },
+              'none',
             ],
           },
         },
       };
     }
 
-    // === GROUPS ===
+    function addConnectionStatusField() {
+      return {
+        $addFields: {
+          connectionStatus: {
+            $cond: {
+              if: {
+                $eq: [
+                  {
+                    $let: {
+                      vars: {
+                        conn: { $arrayElemAt: ['$relatedConnection', 0] },
+                      },
+                      in: '$$conn.status',
+                    },
+                  },
+                  'connected',
+                ],
+              },
+              then: 'connected',
+              else: {
+                $cond: [{ $ne: ['$requestedBy', 'none'] }, 'requested', 'none'],
+              },
+            },
+          },
+        },
+      };
+    }
+
+    // === GRUPOS ===
 
     function normalizeMembersArray() {
       return {
@@ -247,16 +314,20 @@ export const getProfileByUri = async (
       };
     }
 
+    // === PIPELINE FINAL ===
+
     const pipeline = [
       matchProfileByUri(uri),
       lookupConnectedProfiles(targetId),
-      addIsConnectedWithTargetFromConnections(),
+      lookupRequestedOrConnected(targetId),
+      addRequestedByToProfile(),
+      addConnectionStatusField(),
       lookupGroupsByMembership(),
     ];
 
     const profile = await collection.aggregate(pipeline).toArray();
 
-    if (!profile) {
+    if (!profile || profile.length === 0) {
       res.status(404).json({ message: 'Profile not found' });
       return;
     }

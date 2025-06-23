@@ -13,13 +13,34 @@ export const createUser = async (
   console.log('Access POST /auth/register');
 
   try {
-    const newUser: User = { ...req.body };
-
     const db = await getDb();
     const collection = await db?.collection<User>('users');
-    await collection?.insertOne(newUser);
+    const newUser = await collection?.insertOne({ ...req.body });
 
-    res.status(201).send(newUser);
+    const token = jwt.sign({ _id: newUser.insertedId }, config.jwtSecret, {
+      expiresIn: '1h',
+    });
+
+    const refreshToken = jwt.sign(
+      { _id: newUser.insertedId },
+      config.jwtRefreshSecret,
+      {
+        expiresIn: '7d',
+      },
+    );
+
+    res
+      .status(200)
+      .cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        path: '/auth/refresh',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      })
+      .json({ token });
+
+    res.status(201).send(token);
   } catch (error) {
     next(error);
   }

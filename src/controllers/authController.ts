@@ -10,7 +10,7 @@ export const createUser = async (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Access POST /users');
+  console.log('Access POST /auth/register');
 
   try {
     const newUser: User = { ...req.body };
@@ -31,7 +31,7 @@ export const doLogin = async (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Access POST /users/login');
+  console.log('Access POST /auth/login');
 
   try {
     const db = await getDb();
@@ -43,7 +43,7 @@ export const doLogin = async (
       return;
     }
 
-    const token = jwt.sign(user._id, config.jwtSecret, {
+    const token = jwt.sign({ _id: user._id }, config.jwtSecret, {
       expiresIn: '1h',
     });
 
@@ -72,6 +72,8 @@ export const refreshToken = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
+  console.log('Access POST /auth/refresh');
+
   const token = req.cookies.refreshToken;
 
   if (!token) {

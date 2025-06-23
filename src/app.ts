@@ -16,33 +16,37 @@ const allowedOrigins = [
   'https://nexus-theta-three.vercel.app',
 ];
 
+// Configuração do CORS sem lançar erro
+const corsOptions = {
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void,
+  ) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      // Apenas nega, não lança erro para não quebrar o middleware
+      callback(null, false);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+};
+
 app.use(express.json({ limit: '5mb' }));
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  }),
-);
 
-app.options(
-  '*',
+// Usa CORS com a configuração correta
+app.use(cors(corsOptions));
 
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }),
-);
-
+// Middleware de autenticação
 app.use(async (req, res, next) => {
   if (req.path.startsWith('/auth')) {
     return next();
   }
-
   authenticateToken(req, res, next);
 });
 
-// Routes
+// Rotas
 app.use('/profiles', profileRoutes);
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
@@ -50,7 +54,7 @@ app.use('/suggestions', suggestionsRoutes);
 app.use('/feed', feedRoutes);
 app.use('/connections', connectionsRoutes);
 
-// Global error handler (should be after routes)
+// Middleware global de erro (deve ficar após as rotas)
 app.use(errorHandler);
 
 export default app;

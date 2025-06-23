@@ -65,8 +65,8 @@ export const acceptConnection = async (
 
     console.log('Attempting to accept Connection');
 
-    const { profileId } = req.params;
-    const ids = [profileId, user?.activeProfile].map(
+    const { id } = req.params;
+    const ids = [id, user?.activeProfile].map(
       (item) => new ObjectId(item as string),
     );
 
@@ -116,13 +116,12 @@ export const deleteConnection = async (
     const userId = new ObjectId(req.user._id);
     const user = await usersCollection.findOne({ _id: userId });
 
-    console.log('Attempting to delete Connection');
-
-    const { profileId } = req.params;
-    const ids = [profileId, user?.activeProfile].map(
+    const { id } = req.params;
+    const ids = [id, user?.activeProfile].map(
       (item) => new ObjectId(item as string),
     );
 
+    console.log('Attempting to delete Connection', ids);
     const newConnection = await connectionsCollection?.findOneAndDelete({
       between: { $all: ids },
     });

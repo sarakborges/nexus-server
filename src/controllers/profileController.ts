@@ -337,14 +337,24 @@ export const updateProfileById = async (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Access PATCH /profiles/:id');
+  console.log('Access PATCH /profiles');
 
   try {
-    const id = new ObjectId(req.params.id);
+    if (!req.user?._id) {
+      res.status(401).json({ message: 'Usuário não autenticado' });
+      return;
+    }
+
     const db = await getDb();
-    const collection = db?.collection('profiles');
+    const collection = db.collection('profiles');
+    const usersCollection = db.collection('users');
+
+    const userId = new ObjectId(req.user._id);
+
+    const user = await usersCollection.findOne({ _id: userId });
+
     const profile = await collection?.findOneAndUpdate(
-      { _id: id },
+      { _id: user?.activeProfile },
       { $set: { ...req.body } },
       { returnDocument: 'after' },
     );
@@ -372,7 +382,10 @@ export const deleteProfileById = async (
     const id = new ObjectId(req.params.id);
     const db = await getDb();
     const collection = db?.collection('profiles');
-    const profile = await collection?.deleteOne({ _id: id });
+    const profile = await collection?.deleteOne({
+      _id: id,
+      userId: new ObjectId(req.user?._id),
+    });
 
     if (!profile.deletedCount) {
       res.status(404).json({ message: 'Profile not found' });

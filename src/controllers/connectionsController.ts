@@ -72,6 +72,7 @@ export const acceptConnection = async (
 
     const newConnection = await connectionsCollection?.findOneAndUpdate(
       {
+        requestedBy: { $nin: [user?.activeProfile] },
         between: { $all: ids },
       },
 

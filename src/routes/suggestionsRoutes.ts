@@ -3,6 +3,6 @@ import { getSuggestionsByProfile } from '../controllers/suggestionsController.ts
 
 const router = Router();
 
-router.get('/:id', getSuggestionsByProfile);
+router.get('/', getSuggestionsByProfile);
 
 export default router;

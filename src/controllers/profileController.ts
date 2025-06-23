@@ -20,7 +20,7 @@ export const createProfile = async (
     const collection = db.collection('profiles');
 
     const profile = {
-      ...req.body.profile,
+      ...req.body,
       userId: new ObjectId(req.user._id),
     };
 
@@ -354,7 +354,7 @@ export const updateProfileById = async (
     const user = await usersCollection.findOne({ _id: userId });
 
     const profile = await collection?.findOneAndUpdate(
-      { _id: user?.activeProfile },
+      { _id: user?.activeProfile, userId: user?._id },
       { $set: { ...req.body } },
       { returnDocument: 'after' },
     );
@@ -379,11 +379,12 @@ export const deleteProfileById = async (
   console.log('Access DELETE /profiles/:id');
 
   try {
-    const id = new ObjectId(req.params.id);
+    const _id = new ObjectId(req.params.id);
     const db = await getDb();
     const collection = db?.collection('profiles');
+
     const profile = await collection?.deleteOne({
-      _id: id,
+      _id,
       userId: new ObjectId(req.user?._id),
     });
 

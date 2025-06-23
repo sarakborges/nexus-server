@@ -56,7 +56,7 @@ export const getSuggestionsByProfile = async (
     // Sugestões de perfis (exclui o próprio e conexões)
     const profiles = await profilesCollection
       .aggregate([
-        { $match: { _id: { $nin: [userId, ...connections] } } },
+        { $match: { _id: { $nin: [profile?._id, ...connections] } } },
         { $sample: { size: 3 } },
       ])
       .toArray();

@@ -33,66 +33,6 @@ export const changeUserActiveProfile = async (
   }
 };
 
-// Add a new profile to an user
-export const addProfileToUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  console.log('Access PATCH /users/add');
-
-  try {
-    const profile = new ObjectId(req.body.profile as string);
-    const _id = new ObjectId(req.user?._id);
-
-    const db = await getDb();
-    const collection = await db?.collection<User>('users');
-    const user = await collection?.findOneAndUpdate(
-      { _id },
-      { $push: { profiles: profile } },
-    );
-
-    if (!user) {
-      res.status(404).json({ message: 'User not found' });
-      return;
-    }
-
-    res.status(200).send(user);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Remove an existing profile to an user
-export const removeProfileFromUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  console.log('Access PATCH /users/remove');
-
-  try {
-    const profile = new ObjectId(req.body.profile as string);
-    const _id = new ObjectId(req.user?._id);
-
-    const db = await getDb();
-    const collection = await db?.collection<User>('users');
-    const user = await collection?.findOneAndUpdate(
-      { _id },
-      { $pull: { profiles: profile } },
-    );
-
-    if (!user) {
-      res.status(404).json({ message: 'User not found' });
-      return;
-    }
-
-    res.status(200).send(user);
-  } catch (error) {
-    next(error);
-  }
-};
-
 // Read single user
 export const getMe = async (
   req: Request,
@@ -116,8 +56,8 @@ export const getMe = async (
         {
           $lookup: {
             from: 'profiles',
-            localField: 'profiles',
-            foreignField: '_id',
+            localField: '_id',
+            foreignField: 'userId',
             as: 'profiles',
           },
         },

@@ -1,6 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-import config from '../config/config';
+import type { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import type { JwtPayload } from 'jsonwebtoken';
+import config from '../config/config.ts';
 
 function verifyJwt(
   token: string,

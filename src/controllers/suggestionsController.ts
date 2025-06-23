@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { getDb } from '../config/db';
+import { getDb } from '../config/db.ts';
 import { ObjectId } from 'mongodb';
 
 interface Suggestion<T> {

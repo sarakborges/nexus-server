@@ -48,7 +48,7 @@ export const acceptConnection = async (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Access PATCH /connections/accept');
+  console.log('Access PATCH /connections');
 
   try {
     if (!req.user?._id) {

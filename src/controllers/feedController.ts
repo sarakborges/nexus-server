@@ -11,17 +11,24 @@ export const createNewFeedItem = async (
   console.log('Access POST /feed');
 
   try {
+    if (!req.user?._id) {
+      res.status(401).json({ message: 'Non authenticated' });
+      return;
+    }
+
     const db = await getDb();
-    const feedCollection = db.collection('feed');
+    const usersCollection = db.collection('users');
+
+    const userId = new ObjectId(req.user._id);
+    const user = await usersCollection.findOne({ _id: userId });
+
+    const feedCollection = await db?.collection('feed');
 
     console.log('Attempting to insert new Feed Item', req.body);
 
-    const { profileId, ...bodyRest } = req.body;
-    const id = new ObjectId(profileId as string);
-
     const newFeedItem = await feedCollection?.insertOne({
-      profileId: id,
-      ...bodyRest,
+      profileId: user?.activeProfile,
+      ...req.body,
       createdAt: new Date(),
     });
 
@@ -53,11 +60,21 @@ export const getFeedByProfile = async (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Access GET /feed/:id');
+  console.log('Access GET /feed');
 
   try {
-    const id = new ObjectId(req.params.id);
+    if (!req.user?._id) {
+      res.status(401).json({ message: 'Non authenticated' });
+      return;
+    }
+
     const db = await getDb();
+    const usersCollection = db.collection('users');
+
+    const userId = new ObjectId(req.user._id);
+    const user = await usersCollection.findOne({ _id: userId });
+
+    const id = new ObjectId(user?.activeProfile);
 
     // 1. Buscar conexões
     const connections = await db
@@ -127,10 +144,23 @@ export const deleteFeedItemById = async (
   console.log('Access DELETE /feed/:id');
 
   try {
-    const id = new ObjectId(req.params.id);
+    if (!req.user?._id) {
+      res.status(401).json({ message: 'Non authenticated' });
+      return;
+    }
+
     const db = await getDb();
+    const usersCollection = db.collection('users');
+
+    const userId = new ObjectId(req.user._id);
+    const user = await usersCollection.findOne({ _id: userId });
+
+    const id = new ObjectId(req.params.id);
     const collection = await db?.collection('feed');
-    const profile = await collection?.deleteOne({ _id: id });
+    const profile = await collection?.deleteOne({
+      _id: id,
+      profileId: user?.activeProfile,
+    });
 
     if (!profile.deletedCount) {
       res.status(404).json({ message: 'Feed item not found' });

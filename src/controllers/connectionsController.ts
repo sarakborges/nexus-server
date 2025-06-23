@@ -11,22 +11,31 @@ export const createConnection = async (
   console.log('Access POST /connections');
 
   try {
+    if (!req.user?._id) {
+      res.status(401).json({ message: 'Non authenticated' });
+      return;
+    }
+
     const db = await getDb();
     const connectionsCollection = db.collection('connections');
+    const usersCollection = db.collection('users');
 
-    console.log('Attempting to insert new Connection', req.body);
+    const userId = new ObjectId(req.user._id);
+    const user = await usersCollection.findOne({ _id: userId });
 
-    const { between } = req.body;
-    const ids = [...between].map((item) => new ObjectId(item as string));
+    const { profileId } = req.body;
+    const ids = [profileId, user?.activeProfile].map(
+      (item) => new ObjectId(item as string),
+    );
 
     const newConnection = await connectionsCollection?.insertOne({
       between: ids,
-      requestedBy: new ObjectId(req.body.requestedBy as string),
+      requestedBy: new ObjectId(user?.activeProfile as string),
       status: 'requested',
       requestedConnectionAt: new Date(),
     });
 
-    console.log('Inserted new Feed Item:', newConnection.insertedId);
+    console.log('Requested connection:', newConnection.insertedId);
     res.status(201).send({ ...newConnection, _id: newConnection.insertedId });
   } catch (error) {
     next(error);
@@ -42,13 +51,24 @@ export const acceptConnection = async (
   console.log('Access PATCH /connections/accept');
 
   try {
+    if (!req.user?._id) {
+      res.status(401).json({ message: 'Non authenticated' });
+      return;
+    }
+
     const db = await getDb();
     const connectionsCollection = db.collection('connections');
+    const usersCollection = db.collection('users');
+
+    const userId = new ObjectId(req.user._id);
+    const user = await usersCollection.findOne({ _id: userId });
 
     console.log('Attempting to accept Connection', req.body);
 
-    const { between } = req.body;
-    const ids = [...between].map((item) => new ObjectId(item as string));
+    const { profileId } = req.body;
+    const ids = [profileId, user?.activeProfile].map(
+      (item) => new ObjectId(item as string),
+    );
 
     const newConnection = await connectionsCollection?.findOneAndUpdate(
       {
@@ -83,13 +103,24 @@ export const deleteConnection = async (
   console.log('Access DELETE /connections');
 
   try {
+    if (!req.user?._id) {
+      res.status(401).json({ message: 'Non authenticated' });
+      return;
+    }
+
     const db = await getDb();
     const connectionsCollection = db.collection('connections');
+    const usersCollection = db.collection('users');
+
+    const userId = new ObjectId(req.user._id);
+    const user = await usersCollection.findOne({ _id: userId });
 
     console.log('Attempting to delete Connection', req.body);
 
-    const { between } = req.body;
-    const ids = [...between].map((item) => new ObjectId(item as string));
+    const { profileId } = req.body;
+    const ids = [profileId, user?.activeProfile].map(
+      (item) => new ObjectId(item as string),
+    );
 
     const newConnection = await connectionsCollection?.findOneAndDelete({
       between: { $all: ids },

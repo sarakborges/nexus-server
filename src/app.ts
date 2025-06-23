@@ -11,8 +11,18 @@ import { authenticateToken } from './middlewares/authMiddleware.ts';
 
 const app = express();
 
+const allowedOrigins = [
+  'http://localhost',
+  'https://nexus-theta-three.vercel.app',
+];
+
 app.use(express.json({ limit: '5mb' }));
-app.use(cors());
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }),
+);
 
 app.use(async (req, res, next) => {
   if (req.path.startsWith('/auth')) {

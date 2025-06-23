@@ -25,6 +25,7 @@ export const getSuggestionsByProfile = async (
 
     // Collections não são async, não precisa de await aqui
     const usersCollection = db.collection('users');
+    const connectionsCollection = db.collection('connections');
     const profilesCollection = db.collection('profiles');
     const groupsCollection = db.collection('groups');
 
@@ -37,26 +38,53 @@ export const getSuggestionsByProfile = async (
     }
 
     // Buscar perfil ativo do usuário
-    const profile = await profilesCollection.findOne({
-      _id: user.activeProfile,
-    });
+    const connections = await connectionsCollection
+      .aggregate([
+        {
+          $match: {
+            between: { $in: [user.activeProfile] },
+          },
+        },
+        {
+          $addFields: {
+            otherId: {
+              $first: {
+                $filter: {
+                  input: '$between',
+                  as: 'id',
+                  cond: { $ne: ['$$id', user.activeProfile] },
+                },
+              },
+            },
+          },
+        },
+      ])
+      .toArray();
 
-    if (!profile) {
+    if (!connections?.length) {
       res.status(404).json({ message: 'Profile not found' });
       return;
     }
 
-    const connections: ObjectId[] = Array.isArray(profile.connections)
-      ? profile.connections
-      : [];
-    const groupsIn: ObjectId[] = Array.isArray(profile.groups)
-      ? profile.groups
-      : [];
+    const groupsAsMember = await groupsCollection
+      .find({
+        members: { $in: [user?.activeProfile] },
+      })
+      .toArray();
 
     // Sugestões de perfis (exclui o próprio e conexões)
     const profiles = await profilesCollection
       .aggregate([
-        { $match: { _id: { $nin: [profile?._id, ...connections] } } },
+        {
+          $match: {
+            _id: {
+              $nin: [
+                user.activeProfile,
+                ...connections?.map((item) => item.otherId),
+              ],
+            },
+          },
+        },
         { $sample: { size: 3 } },
       ])
       .toArray();
@@ -64,7 +92,7 @@ export const getSuggestionsByProfile = async (
     // Sugestões de grupos (exclui os que já participa)
     const groups = await groupsCollection
       .aggregate([
-        { $match: { _id: { $nin: groupsIn } } },
+        { $match: { _id: { $nin: groupsAsMember?.map((item) => item._id) } } },
         { $sample: { size: 3 } },
       ])
       .toArray();

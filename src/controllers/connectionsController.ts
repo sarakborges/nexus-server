@@ -48,7 +48,7 @@ export const acceptConnection = async (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Access PATCH /connections');
+  console.log('Access PATCH /connections/:id');
 
   try {
     if (!req.user?._id) {
@@ -63,9 +63,9 @@ export const acceptConnection = async (
     const userId = new ObjectId(req.user._id);
     const user = await usersCollection.findOne({ _id: userId });
 
-    console.log('Attempting to accept Connection', req.body);
+    console.log('Attempting to accept Connection');
 
-    const { profileId } = req.body;
+    const { profileId } = req.params;
     const ids = [profileId, user?.activeProfile].map(
       (item) => new ObjectId(item as string),
     );
@@ -101,7 +101,7 @@ export const deleteConnection = async (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Access DELETE /connections');
+  console.log('Access DELETE /connections/:id');
 
   try {
     if (!req.user?._id) {
@@ -116,9 +116,9 @@ export const deleteConnection = async (
     const userId = new ObjectId(req.user._id);
     const user = await usersCollection.findOne({ _id: userId });
 
-    console.log('Attempting to delete Connection', req.body);
+    console.log('Attempting to delete Connection');
 
-    const { profileId } = req.body;
+    const { profileId } = req.params;
     const ids = [profileId, user?.activeProfile].map(
       (item) => new ObjectId(item as string),
     );

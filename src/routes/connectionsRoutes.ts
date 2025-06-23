@@ -8,7 +8,7 @@ import {
 const router = Router();
 
 router.post('/', createConnection);
-router.patch('/', acceptConnection);
-router.delete('/', deleteConnection);
+router.patch('/:id', acceptConnection);
+router.delete('/:id', deleteConnection);
 
 export default router;

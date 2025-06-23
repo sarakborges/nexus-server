@@ -8,7 +8,7 @@ import {
 const router = Router();
 
 router.post('/', createNewFeedItem);
-router.get('/:id', getFeedByProfile);
+router.get('/', getFeedByProfile);
 router.delete('/:id', deleteFeedItemById);
 
 export default router;

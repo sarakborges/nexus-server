@@ -7,36 +7,29 @@ export const createProfile = async (
   req: Request,
   res: Response,
   next: NextFunction,
-) => {
+): Promise<void> => {
   console.log('Access POST /profiles');
 
   try {
-    const profile = { ...req.body };
+    if (!req.user?._id) {
+      res.status(401).json({ message: 'Usuário não autenticado' });
+      return;
+    }
 
     const db = await getDb();
-    const collection = await db?.collection('profiles');
-    await collection?.insertOne(profile);
+    const collection = db.collection('profiles');
 
-    res.status(201).send(profile);
-  } catch (error) {
-    next(error);
-  }
-};
+    const profile = {
+      ...req.body.profile,
+      userId: new ObjectId(req.user._id),
+    };
 
-// Read all profiles
-export const getProfiles = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  console.log('Access GET /profiles');
+    const result = await collection.insertOne(profile);
 
-  try {
-    const db = await getDb();
-    const collection = await db?.collection('profiles');
-    const profiles = await collection?.find().toArray();
-
-    res.status(200).json(profiles);
+    res.status(201).json({
+      ...profile,
+      _id: result.insertedId,
+    });
   } catch (error) {
     next(error);
   }
@@ -53,7 +46,7 @@ export const getProfileById = async (
   try {
     const id = new ObjectId(req.params.id);
     const db = await getDb();
-    const collection = await db?.collection('profiles');
+    const collection = db?.collection('profiles');
     const profile = await collection?.findOne({ _id: id });
 
     if (!profile) {
@@ -79,7 +72,7 @@ export const getProfileByUri = async (
     const { uri } = req.params;
     const targetId = new ObjectId(req.query.targetId as string);
     const db = await getDb();
-    const collection = await db?.collection('profiles');
+    const collection = db?.collection('profiles');
 
     // === MATCH DO PERFIL ===
     function matchProfileByUri(uri: string) {
@@ -349,7 +342,7 @@ export const updateProfileById = async (
   try {
     const id = new ObjectId(req.params.id);
     const db = await getDb();
-    const collection = await db?.collection('profiles');
+    const collection = db?.collection('profiles');
     const profile = await collection?.findOneAndUpdate(
       { _id: id },
       { $set: { ...req.body } },
@@ -378,7 +371,7 @@ export const deleteProfileById = async (
   try {
     const id = new ObjectId(req.params.id);
     const db = await getDb();
-    const collection = await db?.collection('profiles');
+    const collection = db?.collection('profiles');
     const profile = await collection?.deleteOne({ _id: id });
 
     if (!profile.deletedCount) {

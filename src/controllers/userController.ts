@@ -3,43 +3,22 @@ import type { User } from '../models/user.ts';
 import { getDb } from '../config/db.ts';
 import { ObjectId } from 'mongodb';
 
-// Create an user
-export const createUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  console.log('Access POST /users');
-
-  try {
-    const newUser: User = { ...req.body };
-
-    const db = await getDb();
-    const collection = await db?.collection<User>('users');
-    await collection?.insertOne(newUser);
-
-    res.status(201).send(newUser);
-  } catch (error) {
-    next(error);
-  }
-};
-
 // Change which profile is active on user
 export const changeUserActiveProfile = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Access PATCH /users/:id/activeProfile');
+  console.log('Access PATCH /users/activeProfile');
 
   try {
     const profile = new ObjectId(req.body.profile as string);
-    const id = new ObjectId(req.params.id);
+    const _id = new ObjectId(req.user?._id);
 
     const db = await getDb();
     const collection = await db?.collection<User>('users');
     const user = await collection?.findOneAndUpdate(
-      { _id: id },
+      { _id },
       { $set: { activeProfile: profile } },
     );
 
@@ -60,16 +39,16 @@ export const addProfileToUser = async (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Access PATCH /users/:id/add');
+  console.log('Access PATCH /users/add');
 
   try {
     const profile = new ObjectId(req.body.profile as string);
-    const id = new ObjectId(req.params.id);
+    const _id = new ObjectId(req.user?._id);
 
     const db = await getDb();
     const collection = await db?.collection<User>('users');
     const user = await collection?.findOneAndUpdate(
-      { _id: id },
+      { _id },
       { $push: { profiles: profile } },
     );
 
@@ -90,16 +69,16 @@ export const removeProfileFromUser = async (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Access PATCH /users/:id/remove');
+  console.log('Access PATCH /users/remove');
 
   try {
     const profile = new ObjectId(req.body.profile as string);
-    const id = new ObjectId(req.params.id);
+    const _id = new ObjectId(req.user?._id);
 
     const db = await getDb();
     const collection = await db?.collection<User>('users');
     const user = await collection?.findOneAndUpdate(
-      { _id: id },
+      { _id },
       { $pull: { profiles: profile } },
     );
 
@@ -114,40 +93,21 @@ export const removeProfileFromUser = async (
   }
 };
 
-// Login user
-export const doLogin = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  console.log('Access POST /users/login');
-
-  try {
-    const db = await getDb();
-    const collection = await db?.collection<User>('users');
-    const user = await collection?.findOne({ ...req.body });
-
-    if (!user) {
-      res.status(404).json({ message: 'User not found' });
-      return;
-    }
-
-    res.status(200).json(user);
-  } catch (error) {
-    next(error);
-  }
-};
-
 // Read single user
 export const getMe = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Access GET /users/:id');
+  console.log('Access GET /users/me');
 
   try {
-    const id = new ObjectId(req.params.id);
+    if (!req.user) {
+      res.status(401).json({ message: 'Usuário não autenticado' });
+      return;
+    }
+
+    const id = new ObjectId(req.user._id);
     const db = await getDb();
     const collection = await db?.collection<User>('users');
     const user = await collection
@@ -163,7 +123,7 @@ export const getMe = async (
         },
       ])
       .toArray();
-    if (!user) {
+    if (!user?.length) {
       res.status(404).json({ message: 'User not found' });
       return;
     }

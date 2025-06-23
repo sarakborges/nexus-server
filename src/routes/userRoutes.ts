@@ -1,7 +1,5 @@
 import { Router } from 'express';
 import {
-  createUser,
-  doLogin,
   getMe,
   addProfileToUser,
   removeProfileFromUser,
@@ -10,11 +8,9 @@ import {
 
 const router = Router();
 
-router.post('/login', doLogin);
-router.get('/:id', getMe);
-router.patch('/:id/add', addProfileToUser);
-router.patch('/:id/remove', removeProfileFromUser);
-router.patch('/:id/activeProfile', changeUserActiveProfile);
-router.post('/', createUser);
+router.get('/me', getMe);
+router.patch('/add', addProfileToUser);
+router.patch('/remove', removeProfileFromUser);
+router.patch('/activeProfile', changeUserActiveProfile);
 
 export default router;

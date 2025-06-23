@@ -47,11 +47,9 @@ export const doLogin = async (
       expiresIn: '1h',
     });
 
-    const refreshToken = jwt.sign(
-      { _id: user._id },
-      process.env.REFRESH_SECRET!,
-      { expiresIn: '7d' },
-    );
+    const refreshToken = jwt.sign({ _id: user._id }, config.jwtRefreshSecret, {
+      expiresIn: '7d',
+    });
 
     res
       .status(200)
@@ -95,7 +93,7 @@ export const refreshToken = async (
     const newAccessToken = jwt.sign(
       { _id: decoded._id },
       config.jwtSecret, // ✅ segredo correto aqui
-      { expiresIn: '15m' },
+      { expiresIn: '1h' },
     );
 
     res.status(200).json({ token: newAccessToken });

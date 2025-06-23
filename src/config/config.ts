@@ -7,6 +7,7 @@ interface Config {
   nodeEnv: string;
   atlasUri: string;
   jwtSecret: string;
+  jwtRefreshSecret: string;
 }
 
 const config: Config = {
@@ -14,6 +15,7 @@ const config: Config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   atlasUri: process.env.ATLAS_URI || '',
   jwtSecret: process.env.JWT_SECRET || '',
+  jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || '',
 };
 
 export default config;

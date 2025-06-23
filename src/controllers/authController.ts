@@ -47,8 +47,57 @@ export const doLogin = async (
       expiresIn: '1h',
     });
 
-    res.status(200).json({ token });
+    const refreshToken = jwt.sign(
+      { _id: user._id },
+      process.env.REFRESH_SECRET!,
+      { expiresIn: '7d' },
+    );
+
+    res
+      .status(200)
+      .cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        path: '/auth/refresh',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      })
+      .json({ token });
   } catch (error) {
     next(error);
+  }
+};
+
+export const refreshToken = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const token = req.cookies.refreshToken;
+
+  if (!token) {
+    res.sendStatus(401);
+    return;
+  } // Não autenticado
+
+  try {
+    const decoded = jwt.verify(
+      token,
+      config.jwtRefreshSecret,
+    ) as Express.UserPayload;
+
+    if (!decoded._id) {
+      res.sendStatus(403); // Token malformado
+      return;
+    }
+
+    const newAccessToken = jwt.sign(
+      { _id: decoded._id },
+      config.jwtSecret, // ✅ segredo correto aqui
+      { expiresIn: '15m' },
+    );
+
+    res.status(200).json({ token: newAccessToken });
+  } catch (err) {
+    res.sendStatus(403); // Token inválido
   }
 };

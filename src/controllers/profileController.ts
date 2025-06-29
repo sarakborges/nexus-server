@@ -60,6 +60,61 @@ export const getProfileById = async (
   }
 };
 
+export async function fetchConnectionRequests(profileId: ObjectId) {
+  const db = await getDb();
+  const connectionsCollection = db.collection('connections');
+
+  const pipeline = [
+    {
+      $match: {
+        status: 'requested',
+        between: profileId,
+      },
+    },
+    {
+      $match: {
+        $expr: {
+          $and: [
+            { $in: [profileId, '$between'] },
+            { $ne: ['$requestedBy', profileId] },
+          ],
+        },
+      },
+    },
+    {
+      $addFields: {
+        otherProfileId: {
+          $cond: [
+            { $eq: [profileId, { $arrayElemAt: ['$between', 0] }] },
+            { $arrayElemAt: ['$between', 1] },
+            { $arrayElemAt: ['$between', 0] },
+          ],
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: 'profiles',
+        localField: 'otherProfileId',
+        foreignField: '_id',
+        as: 'otherProfile',
+      },
+    },
+    { $unwind: '$otherProfile' },
+
+    // Ordenar por data da solicitação (mais recente primeiro)
+    {
+      $sort: { requestedConnectionAt: -1 },
+    },
+  ];
+
+  const connectionRequests = await connectionsCollection
+    .aggregate(pipeline)
+    .toArray();
+
+  return connectionRequests;
+}
+
 // Read single profile
 export const getProfileByUri = async (
   req: Request,

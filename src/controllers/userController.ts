@@ -4,6 +4,7 @@ import { getDb } from '../config/db.ts';
 import { ObjectId } from 'mongodb';
 import { fetchSuggestionsForProfile } from './suggestionsController.ts';
 import { fetchFeedForProfile } from './feedController.ts';
+import { fetchConnectionRequests } from './profileController.ts';
 
 // Change which profile is active on user
 export const changeUserActiveProfile = async (
@@ -77,11 +78,14 @@ export const getMe = async (
     // Busca sugestões com a função genérica
     const suggestions = await fetchSuggestionsForProfile(activeProfileId);
     const feed = await fetchFeedForProfile(activeProfileId);
+    const connectionRequests = await fetchConnectionRequests(activeProfileId);
 
     return res.status(200).json({
       user: userWithProfiles,
       suggestions,
       feed,
+
+      notifications: [...connectionRequests],
     });
   } catch (error) {
     next(error);

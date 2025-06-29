@@ -3,7 +3,6 @@ import cors from 'cors';
 import profileRoutes from './routes/profileRoutes.ts';
 import authRoutes from './routes/authRoutes.ts';
 import userRoutes from './routes/userRoutes.ts';
-import suggestionsRoutes from './routes/suggestionsRoutes.ts';
 import feedRoutes from './routes/feedRoutes.ts';
 import connectionsRoutes from './routes/connectionsRoutes.ts';
 import { errorHandler } from './middlewares/errorHandler.ts';
@@ -50,7 +49,6 @@ app.use(async (req, res, next) => {
 app.use('/profiles', profileRoutes);
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
-app.use('/suggestions', suggestionsRoutes);
 app.use('/feed', feedRoutes);
 app.use('/connections', connectionsRoutes);
 

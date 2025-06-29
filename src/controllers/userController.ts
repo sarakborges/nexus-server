@@ -2,6 +2,8 @@ import type { Request, Response, NextFunction } from 'express';
 import type { User } from '../models/user.ts';
 import { getDb } from '../config/db.ts';
 import { ObjectId } from 'mongodb';
+import { fetchSuggestionsForProfile } from './suggestionsController.ts';
+import { fetchFeedForProfile } from './feedController.ts';
 
 // Change which profile is active on user
 export const changeUserActiveProfile = async (
@@ -39,20 +41,18 @@ export const getMe = async (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Access GET /users/me');
-
   try {
-    if (!req.user) {
-      res.status(401).json({ message: 'Usuário não autenticado' });
-      return;
+    if (!req.user?._id) {
+      return res.status(401).json({ message: 'Usuário não autenticado' });
     }
 
-    const id = new ObjectId(req.user._id);
+    const userId = new ObjectId(req.user._id);
     const db = await getDb();
-    const collection = await db?.collection<User>('users');
-    const user = await collection
-      ?.aggregate([
-        { $match: { _id: id } },
+    const usersCollection = db.collection('users');
+
+    const [userWithProfiles] = await usersCollection
+      .aggregate([
+        { $match: { _id: userId } },
         {
           $lookup: {
             from: 'profiles',
@@ -63,12 +63,26 @@ export const getMe = async (
         },
       ])
       .toArray();
-    if (!user?.length) {
-      res.status(404).json({ message: 'User not found' });
-      return;
+
+    if (!userWithProfiles) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    res.status(200).json(user[0]);
+    // Pega o perfil ativo do usuário (você pode adaptar se for outra lógica)
+    const activeProfileId = userWithProfiles.activeProfile;
+    if (!activeProfileId) {
+      return res.status(400).json({ message: 'Perfil ativo não definido' });
+    }
+
+    // Busca sugestões com a função genérica
+    const suggestions = await fetchSuggestionsForProfile(activeProfileId);
+    const feed = await fetchFeedForProfile(activeProfileId);
+
+    return res.status(200).json({
+      user: userWithProfiles,
+      suggestions,
+      feed,
+    });
   } catch (error) {
     next(error);
   }

@@ -54,6 +54,48 @@ export const createNewFeedItem = async (
   }
 };
 
+export async function fetchFeedForProfile(profileId: ObjectId) {
+  const db = await getDb();
+
+  // Buscar conexões
+  const connections = await db
+    .collection('connections')
+    .find({
+      status: 'connected',
+      between: { $in: [profileId] },
+    })
+    .toArray();
+
+  // Extrair perfis conectados
+  const connectionIds = connections.map((conn) => {
+    const [a, b] = conn.between;
+    return a.equals(profileId) ? b : a;
+  });
+
+  // Incluir o próprio perfil
+  const allProfileIds = [profileId, ...connectionIds];
+
+  // Buscar posts do feed
+  const feed = await db
+    .collection('feed')
+    .aggregate([
+      { $match: { profileId: { $in: allProfileIds } } },
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'profileId',
+          foreignField: '_id',
+          as: 'profile',
+        },
+      },
+      { $unwind: '$profile' },
+      { $sort: { createdAt: -1 } },
+    ])
+    .toArray();
+
+  return feed;
+}
+
 // Read all feed from profile
 export const getFeedByProfile = async (
   req: Request,
@@ -74,55 +116,9 @@ export const getFeedByProfile = async (
     const userId = new ObjectId(req.user._id);
     const user = await usersCollection.findOne({ _id: userId });
 
-    const id = new ObjectId(user?.activeProfile);
+    const id = new ObjectId(user?.activeProfile as string);
 
-    // 1. Buscar conexões
-    const connections = await db
-      .collection('connections')
-      .find({
-        status: 'connected',
-        between: { $in: [id] },
-      })
-      .toArray();
-
-    // 2. Extrair os outros perfis conectados
-    const connectionIds = connections.map((conn) => {
-      const [a, b] = conn.between;
-      return a.equals(id) ? b : a;
-    });
-
-    // 3. Incluir o próprio perfil
-    const allProfileIds = [id, ...connectionIds];
-
-    const feed = await db
-      .collection('feed')
-      .aggregate([
-        // 4. Buscar todos os posts do perfil + conexões
-        {
-          $match: {
-            profileId: { $in: allProfileIds },
-          },
-        },
-
-        // 5. Trazer dados do autor do post
-        {
-          $lookup: {
-            from: 'profiles',
-            localField: 'profileId',
-            foreignField: '_id',
-            as: 'profile',
-          },
-        },
-        {
-          $unwind: '$profile',
-        },
-
-        // 6. (Opcional) Ordenar por data
-        {
-          $sort: { createdAt: -1 },
-        },
-      ])
-      .toArray();
+    const feed = await fetchFeedForProfile(id);
 
     if (!feed?.length) {
       res.status(404).json({ message: 'No feed found' });

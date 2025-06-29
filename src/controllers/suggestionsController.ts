@@ -1,114 +1,67 @@
-import type { Request, Response, NextFunction } from 'express';
 import { getDb } from '../config/db.ts';
 import { ObjectId } from 'mongodb';
 
-interface Suggestion<T> {
-  type: 'profile' | 'group';
-  suggestions: T[];
-}
+export async function fetchSuggestionsForProfile(profileId: ObjectId) {
+  const db = await getDb();
+  const connectionsCollection = db.collection('connections');
+  const profilesCollection = db.collection('profiles');
+  const groupsCollection = db.collection('groups');
 
-export const getSuggestionsByProfile = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> => {
-  console.log('Access GET /suggestions');
-
-  try {
-    if (!req.user?._id) {
-      res.status(401).json({ message: 'Non authenticated' });
-      return;
-    }
-
-    const userId = new ObjectId(req.user._id);
-    const db = await getDb();
-
-    // Collections não são async, não precisa de await aqui
-    const usersCollection = db.collection('users');
-    const connectionsCollection = db.collection('connections');
-    const profilesCollection = db.collection('profiles');
-    const groupsCollection = db.collection('groups');
-
-    // Buscar usuário
-    const user = await usersCollection.findOne({ _id: userId });
-
-    if (!user) {
-      res.status(401).json({ message: 'Non authenticated' });
-      return;
-    }
-
-    // Buscar perfil ativo do usuário
-    const connections = await connectionsCollection
-      .aggregate([
-        {
-          $match: {
-            between: { $in: [user.activeProfile] },
-          },
+  // Buscar conexões do perfil
+  const connections = await connectionsCollection
+    .aggregate([
+      {
+        $match: {
+          between: { $in: [profileId] },
         },
-        {
-          $addFields: {
-            otherId: {
-              $first: {
-                $filter: {
-                  input: '$between',
-                  as: 'id',
-                  cond: { $ne: ['$$id', user.activeProfile] },
-                },
+      },
+      {
+        $addFields: {
+          otherId: {
+            $first: {
+              $filter: {
+                input: '$between',
+                as: 'id',
+                cond: { $ne: ['$$id', profileId] },
               },
             },
           },
         },
-      ])
-      .toArray();
+      },
+    ])
+    .toArray();
 
-    if (!connections?.length) {
-      res.status(404).json({ message: 'Profile not found' });
-      return;
-    }
+  // Grupos do perfil
+  const groupsAsMember = await groupsCollection
+    .find({
+      members: { $in: [profileId] },
+    })
+    .toArray();
 
-    const groupsAsMember = await groupsCollection
-      .find({
-        members: { $in: [user?.activeProfile] },
-      })
-      .toArray();
-
-    // Sugestões de perfis (exclui o próprio e conexões)
-    const profiles = await profilesCollection
-      .aggregate([
-        {
-          $match: {
-            _id: {
-              $nin: [
-                user.activeProfile,
-                ...connections?.map((item) => item.otherId),
-              ],
-            },
+  // Sugestões de perfis (excluindo próprio e conexões)
+  const profiles = await profilesCollection
+    .aggregate([
+      {
+        $match: {
+          _id: {
+            $nin: [profileId, ...connections.map((c) => c.otherId)],
           },
         },
-        { $sample: { size: 3 } },
-      ])
-      .toArray();
+      },
+      { $sample: { size: 3 } },
+    ])
+    .toArray();
 
-    // Sugestões de grupos (exclui os que já participa)
-    const groups = await groupsCollection
-      .aggregate([
-        { $match: { _id: { $nin: groupsAsMember?.map((item) => item._id) } } },
-        { $sample: { size: 3 } },
-      ])
-      .toArray();
+  // Sugestões de grupos (excluindo os que já participa)
+  const groups = await groupsCollection
+    .aggregate([
+      { $match: { _id: { $nin: groupsAsMember.map((g) => g._id) } } },
+      { $sample: { size: 3 } },
+    ])
+    .toArray();
 
-    if (profiles.length === 0 && groups.length === 0) {
-      res.status(404).json({ message: 'No suggestions found' });
-      return;
-    }
-
-    const suggestions: Suggestion<any>[] = [
-      { type: 'profile', suggestions: profiles },
-      { type: 'group', suggestions: groups },
-    ];
-
-    res.status(200).json(suggestions);
-  } catch (error) {
-    next(error);
-  }
-};
+  return [
+    { type: 'profile', suggestions: profiles },
+    { type: 'group', suggestions: groups },
+  ];
+}

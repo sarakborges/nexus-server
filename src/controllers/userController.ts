@@ -85,7 +85,12 @@ export const getMe = async (
       suggestions,
       feed,
 
-      notifications: [...connectionRequests],
+      notifications: [
+        ...connectionRequests.map((notificationItem) => ({
+          ...notificationItem,
+          type: 'connectionRequest',
+        })),
+      ],
     });
   } catch (error) {
     next(error);

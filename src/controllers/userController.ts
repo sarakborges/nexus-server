@@ -72,7 +72,11 @@ export const getMe = async (
     // Pega o perfil ativo do usuário (você pode adaptar se for outra lógica)
     const activeProfileId = userWithProfiles.activeProfile;
     if (!activeProfileId) {
-      return res.status(400).json({ message: 'Perfil ativo não definido' });
+      res.status(200).json({
+        user: userWithProfiles,
+      });
+
+      return;
     }
 
     // Busca sugestões com a função genérica

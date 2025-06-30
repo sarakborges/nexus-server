@@ -165,8 +165,8 @@ export const deleteConnection = async (
 
     const newNotification = await notificationsCollection.deleteOne({
       from: new ObjectId(id),
-      to: user?.activeProfile,
-      type: 'connectionRequested',
+      to: new ObjectId(user?.activeProfile as string),
+      type: { $in: ['connectionRequested', 'connectionRequestAccepted'] },
     });
 
     if (!newNotification?.deletedCount) {

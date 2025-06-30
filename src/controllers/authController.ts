@@ -3,6 +3,18 @@ import jwt from 'jsonwebtoken';
 import type { User } from '../models/user.ts';
 import { getDb } from '../config/db.ts';
 import config from '../config/config.ts';
+import crypto from 'crypto';
+
+const hashPassword = (pass: string) => {
+  const salt = crypto.randomBytes(16).toString('hex'); // gera salt aleatório
+  const iterations = 100000;
+  const keylen = 64;
+  const digest = 'sha512';
+
+  return crypto
+    .pbkdf2Sync(pass, salt, iterations, keylen, digest)
+    .toString('hex');
+};
 
 // Create an user
 export const createUser = async (
@@ -13,9 +25,15 @@ export const createUser = async (
   console.log('Access POST /auth/register');
 
   try {
+    const { email, password } = req.body;
+    const encryptedPass = hashPassword(password);
+
     const db = await getDb();
-    const collection = await db?.collection<User>('users');
-    const newUser = await collection?.insertOne({ ...req.body });
+    const collection = await db?.collection<Omit<User, '_id'>>('users');
+    const newUser = await collection?.insertOne({
+      email,
+      password: encryptedPass,
+    });
 
     const token = jwt.sign({ _id: newUser.insertedId }, config.jwtSecret, {
       expiresIn: '1h',
@@ -54,10 +72,13 @@ export const doLogin = async (
 ) => {
   console.log('Access POST /auth/login');
 
+  const { email, password } = req.body;
+  const encryptedPass = hashPassword(password);
+
   try {
     const db = await getDb();
     const collection = await db?.collection<User>('users');
-    const user = await collection?.findOne({ ...req.body });
+    const user = await collection?.findOne({ email, password: encryptedPass });
 
     if (!user) {
       res.status(404).json({ message: 'User not found' });

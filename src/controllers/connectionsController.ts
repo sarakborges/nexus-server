@@ -143,6 +143,7 @@ export const deleteConnection = async (
     const db = await getDb();
     const connectionsCollection = db.collection('connections');
     const usersCollection = db.collection('users');
+    const notificationsCollection = db.collection('notifications');
 
     const userId = new ObjectId(req.user._id);
     const user = await usersCollection.findOne({ _id: userId });
@@ -158,6 +159,17 @@ export const deleteConnection = async (
     });
 
     if (!newConnection?._id) {
+      res.status(204).send();
+      return;
+    }
+
+    const newNotification = await notificationsCollection.deleteOne({
+      from: new ObjectId(id),
+      to: user?.activeProfile,
+      type: 'connectionRequested',
+    });
+
+    if (!newNotification?.deletedCount) {
       res.status(204).send();
       return;
     }

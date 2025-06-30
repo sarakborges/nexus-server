@@ -42,7 +42,7 @@ export const createConnection = async (
     }
 
     const newNotification = await notificationsCollection.insertOne({
-      from: user?.activeProfile,
+      from: new ObjectId(user?.activeProfile as string),
       to: new ObjectId(profileId as string),
       type: 'connectionRequested',
       at: new Date(),
@@ -109,13 +109,24 @@ export const acceptConnection = async (
     }
 
     const newNotification = await notificationsCollection.insertOne({
-      from: user?.activeProfile,
+      from: new ObjectId(user?.activeProfile as string),
       to: new ObjectId(id),
       type: 'connectionRequestAccepted',
       at: new Date(),
     });
 
     if (!newNotification?.insertedId) {
+      res.status(204).send();
+      return;
+    }
+
+    const deletedNotification = await notificationsCollection.deleteOne({
+      from: new ObjectId(id),
+      to: new ObjectId(user?.activeProfile as string),
+      type: { $in: ['connectionRequested', 'connectionRequestAccepted'] },
+    });
+
+    if (!deletedNotification?.deletedCount) {
       res.status(204).send();
       return;
     }

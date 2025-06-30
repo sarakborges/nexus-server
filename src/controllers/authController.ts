@@ -6,14 +6,7 @@ import config from '../config/config.ts';
 import crypto from 'crypto';
 
 const hashPassword = (pass: string) => {
-  const salt = crypto.randomBytes(16).toString('hex'); // gera salt aleatório
-  const iterations = 100000;
-  const keylen = 64;
-  const digest = 'sha512';
-
-  return crypto
-    .pbkdf2Sync(pass, salt, iterations, keylen, digest)
-    .toString('hex');
+  return crypto.createHash('sha256').update(pass).digest('hex');
 };
 
 // Create an user

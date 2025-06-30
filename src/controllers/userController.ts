@@ -113,7 +113,7 @@ export const getMe = async (
         },
         {
           $addFields: {
-            fromProfile: {
+            fromProfileId: {
               $cond: {
                 if: {
                   $in: [
@@ -125,29 +125,41 @@ export const getMe = async (
                 else: null,
               },
             },
-            fromGroup: {
+            fromGroupId: {
               $cond: {
                 if: { $eq: ['$type', 'membershipAccepted'] },
                 then: '$from',
                 else: null,
               },
             },
+            toProfileId: '$to', // sempre um profile
           },
         },
+        // Lookup do FROM: profile
         {
           $lookup: {
             from: 'profiles',
-            localField: 'fromProfile',
+            localField: 'fromProfileId',
             foreignField: '_id',
             as: 'fromProfileData',
           },
         },
+        // Lookup do FROM: group
         {
           $lookup: {
             from: 'groups',
-            localField: 'fromGroup',
+            localField: 'fromGroupId',
             foreignField: '_id',
             as: 'fromGroupData',
+          },
+        },
+        // Lookup do TO: profile
+        {
+          $lookup: {
+            from: 'profiles',
+            localField: 'toProfileId',
+            foreignField: '_id',
+            as: 'toProfileData',
           },
         },
         {
@@ -164,14 +176,17 @@ export const getMe = async (
                 else: { $arrayElemAt: ['$fromGroupData', 0] },
               },
             },
+            to: { $arrayElemAt: ['$toProfileData', 0] },
           },
         },
         {
           $project: {
             fromProfileData: 0,
             fromGroupData: 0,
-            fromProfile: 0,
-            fromGroup: 0,
+            toProfileData: 0,
+            fromProfileId: 0,
+            fromGroupId: 0,
+            toProfileId: 0,
           },
         },
         {

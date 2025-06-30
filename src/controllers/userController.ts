@@ -86,7 +86,30 @@ export const getMe = async (
       .collection('notifications')
       .aggregate([
         {
-          $match: { to: new ObjectId(activeProfileId as string) },
+          $match: {
+            $or: [
+              { to: new ObjectId(userWithProfiles?.activeProfile as string) },
+              {
+                $and: [
+                  { type: 'connectionRequestAccepted' },
+                  {
+                    $or: [
+                      {
+                        to: new ObjectId(
+                          userWithProfiles?.activeProfile as string,
+                        ),
+                      },
+                      {
+                        from: new ObjectId(
+                          userWithProfiles?.activeProfile as string,
+                        ),
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
         },
         {
           $addFields: {
@@ -152,7 +175,7 @@ export const getMe = async (
           },
         },
         {
-          $sort: { at: -1 }, // -1 = ordem decrescente
+          $sort: { at: -1 },
         },
       ])
       .toArray();

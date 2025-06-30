@@ -86,7 +86,7 @@ export const getMe = async (
       .collection('notifications')
       .aggregate([
         {
-          $match: { to: new ObjectId(activeProfileId) },
+          $match: { to: new ObjectId(activeProfileId as string) },
         },
         {
           $addFields: {

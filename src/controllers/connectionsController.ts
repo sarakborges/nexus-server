@@ -43,7 +43,7 @@ export const createConnection = async (
 
     const newNotification = await notificationsCollection.insertOne({
       from: user?.activeProfile,
-      to: profileId,
+      to: new ObjectId(profileId as string),
       type: 'connectionRequested',
       at: new Date(),
     });
@@ -110,7 +110,7 @@ export const acceptConnection = async (
 
     const newNotification = await notificationsCollection.insertOne({
       from: user?.activeProfile,
-      to: id,
+      to: new ObjectId(id),
       type: 'connectionRequestAccepted',
       at: new Date(),
     });

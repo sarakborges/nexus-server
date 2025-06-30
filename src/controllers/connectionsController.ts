@@ -19,6 +19,7 @@ export const createConnection = async (
     const db = await getDb();
     const connectionsCollection = db.collection('connections');
     const usersCollection = db.collection('users');
+    const notificationsCollection = db.collection('notifications');
 
     const userId = new ObjectId(req.user._id);
     const user = await usersCollection.findOne({ _id: userId });
@@ -34,6 +35,23 @@ export const createConnection = async (
       status: 'requested',
       requestedConnectionAt: new Date(),
     });
+
+    if (!newConnection?.insertedId) {
+      res.status(204).send();
+      return;
+    }
+
+    const newNotification = await notificationsCollection.insertOne({
+      from: user?.activeProfile,
+      to: profileId,
+      type: 'connectionRequested',
+      at: new Date(),
+    });
+
+    if (!newNotification?.insertedId) {
+      res.status(204).send();
+      return;
+    }
 
     console.log('Requested connection:', newConnection.insertedId);
     res.status(201).send({ ...newConnection, _id: newConnection.insertedId });
@@ -58,6 +76,7 @@ export const acceptConnection = async (
 
     const db = await getDb();
     const connectionsCollection = db.collection('connections');
+    const notificationsCollection = db.collection('notifications');
     const usersCollection = db.collection('users');
 
     const userId = new ObjectId(req.user._id);
@@ -85,6 +104,18 @@ export const acceptConnection = async (
     );
 
     if (!newConnection?._id) {
+      res.status(204).send();
+      return;
+    }
+
+    const newNotification = await notificationsCollection.insertOne({
+      from: user?.activeProfile,
+      to: id,
+      type: 'connectionRequestAccepted',
+      at: new Date(),
+    });
+
+    if (!newNotification?.insertedId) {
       res.status(204).send();
       return;
     }

@@ -4,7 +4,6 @@ import { getDb } from '../config/db.ts';
 import { ObjectId } from 'mongodb';
 import { fetchSuggestionsForProfile } from './suggestionsController.ts';
 import { fetchFeedForProfile } from './feedController.ts';
-import { fetchConnectionRequests } from './profileController.ts';
 
 // Change which profile is active on user
 export const changeUserActiveProfile = async (
@@ -82,19 +81,84 @@ export const getMe = async (
     // Busca sugestões com a função genérica
     const suggestions = await fetchSuggestionsForProfile(activeProfileId);
     const feed = await fetchFeedForProfile(activeProfileId);
-    const connectionRequests = await fetchConnectionRequests(activeProfileId);
+
+    const notifications = await db
+      .collection('notifications')
+      .aggregate([
+        {
+          $match: { to: new ObjectId(activeProfileId) },
+        },
+        {
+          $addFields: {
+            fromProfile: {
+              $cond: {
+                if: {
+                  $in: [
+                    '$type',
+                    ['connectionRequested', 'connectionRequestAccepted'],
+                  ],
+                },
+                then: '$from',
+                else: null,
+              },
+            },
+            fromGroup: {
+              $cond: {
+                if: { $eq: ['$type', 'membershipAccepted'] },
+                then: '$from',
+                else: null,
+              },
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: 'profiles',
+            localField: 'fromProfile',
+            foreignField: '_id',
+            as: 'fromProfileData',
+          },
+        },
+        {
+          $lookup: {
+            from: 'groups',
+            localField: 'fromGroup',
+            foreignField: '_id',
+            as: 'fromGroupData',
+          },
+        },
+        {
+          $addFields: {
+            from: {
+              $cond: {
+                if: {
+                  $in: [
+                    '$type',
+                    ['connectionRequested', 'connectionRequestAccepted'],
+                  ],
+                },
+                then: { $arrayElemAt: ['$fromProfileData', 0] },
+                else: { $arrayElemAt: ['$fromGroupData', 0] },
+              },
+            },
+          },
+        },
+        {
+          $project: {
+            fromProfileData: 0,
+            fromGroupData: 0,
+            fromProfile: 0,
+            fromGroup: 0,
+          },
+        },
+      ])
+      .toArray();
 
     return res.status(200).json({
       user: userWithProfiles,
       suggestions,
       feed,
-
-      notifications: [
-        ...connectionRequests.map((notificationItem) => ({
-          ...notificationItem,
-          type: 'connectionRequest',
-        })),
-      ],
+      notifications,
     });
   } catch (error) {
     next(error);

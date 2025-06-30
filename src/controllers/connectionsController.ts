@@ -123,7 +123,7 @@ export const acceptConnection = async (
     const deletedNotification = await notificationsCollection.deleteOne({
       from: new ObjectId(id),
       to: new ObjectId(user?.activeProfile as string),
-      type: { $in: ['connectionRequested', 'connectionRequestAccepted'] },
+      type: { $in: ['connectionRequested'] },
     });
 
     if (!deletedNotification?.deletedCount) {
@@ -177,7 +177,7 @@ export const deleteConnection = async (
     const newNotification = await notificationsCollection.deleteOne({
       from: new ObjectId(id),
       to: new ObjectId(user?.activeProfile as string),
-      type: { $in: ['connectionRequested', 'connectionRequestAccepted'] },
+      type: { $in: ['connectionRequested'] },
     });
 
     if (!newNotification?.deletedCount) {

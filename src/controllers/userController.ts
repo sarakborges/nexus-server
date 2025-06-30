@@ -151,6 +151,9 @@ export const getMe = async (
             fromGroup: 0,
           },
         },
+        {
+          $sort: { at: -1 }, // -1 = ordem decrescente
+        },
       ])
       .toArray();
 

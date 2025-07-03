@@ -8,4 +8,9 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   target: 'node18',
+  esbuildOptions(options) {
+    options.alias = {
+      '@': './src',
+    };
+  },
 });

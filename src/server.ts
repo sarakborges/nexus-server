@@ -1,8 +1,8 @@
-import config from './config/config.ts'; // Your config file with port, etc.
-import app from './app.ts'; // Your express app with routes defined
+import config from '@/config/config.ts';
+import app from '@/app.ts';
 
-const PORT = config.port;
+const port = config.port;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });

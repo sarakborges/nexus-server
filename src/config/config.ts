@@ -8,6 +8,7 @@ interface Config {
   atlasUri: string;
   jwtSecret: string;
   jwtRefreshSecret: string;
+  dbName: string;
 }
 
 const config: Config = {
@@ -16,6 +17,7 @@ const config: Config = {
   atlasUri: process.env.ATLAS_URI || '',
   jwtSecret: process.env.JWT_SECRET || '',
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || '',
+  dbName: process.env.DB_NAME || '',
 };
 
 export default config;

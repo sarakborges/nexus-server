@@ -1,18 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import type { JwtPayload } from 'jsonwebtoken';
-import config from '../config/config.ts';
+import { verifyJwt } from '@/utils/jwt.util.ts';
 
-function verifyJwt(
-  token: string,
-  secret: string,
-): Promise<string | JwtPayload> {
-  return new Promise((resolve, reject) => {
-    jwt.verify(token, secret, (err, decoded) => {
-      if (err) return reject(err);
-      resolve(decoded!);
-    });
-  });
+interface UserPayload extends JwtPayload {
+  _id: string;
 }
 
 export const authenticateToken = async (
@@ -29,20 +20,22 @@ export const authenticateToken = async (
       return;
     }
 
-    const decoded = (await verifyJwt(token, config.jwtSecret)) as
-      | Express.UserPayload
-      | string;
+    const decoded = (await verifyJwt(token)) as JwtPayload | string;
 
-    if (!decoded || typeof decoded === 'string' || !decoded._id) {
+    if (!decoded || typeof decoded === 'string') {
       res.status(403).json({ message: 'Token inválido' });
       return;
     }
 
-    req.user = decoded;
+    if (!('_id' in decoded) || typeof decoded._id !== 'string') {
+      res.status(403).json({ message: 'Token inválido' });
+      return;
+    }
+
+    req.user = decoded as UserPayload;
 
     next();
-  } catch (error) {
+  } catch {
     res.status(403).json({ message: 'Token inválido' });
-    return;
   }
 };

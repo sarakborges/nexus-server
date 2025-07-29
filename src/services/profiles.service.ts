@@ -143,7 +143,8 @@ export const getProfileByUri = async (uri: string, targetId: string) => {
       {
         $addFields: {
           requestedBy: {
-            $ifNull: [
+            $cond: [
+              { $gt: [{ $size: '$relatedConnection' }, 0] },
               {
                 $let: {
                   vars: { conn: { $arrayElemAt: ['$relatedConnection', 0] } },
@@ -170,7 +171,31 @@ export const getProfileByUri = async (uri: string, targetId: string) => {
               },
               then: 'connected',
               else: {
-                $cond: [{ $ne: ['$requestedBy', 'none'] }, 'requested', 'none'],
+                $cond: [
+                  {
+                    $ne: [
+                      {
+                        $cond: [
+                          { $gt: [{ $size: '$relatedConnection' }, 0] },
+                          {
+                            $let: {
+                              vars: {
+                                conn: {
+                                  $arrayElemAt: ['$relatedConnection', 0],
+                                },
+                              },
+                              in: '$$conn.requestedBy',
+                            },
+                          },
+                          'none',
+                        ],
+                      },
+                      'none',
+                    ],
+                  },
+                  'requested',
+                  'none',
+                ],
               },
             },
           },
